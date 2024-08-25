@@ -7,48 +7,46 @@ import axios from "axios";
 function App() {
   return (
     <>
-      <JsonInput />
+      <JsonInputComponent />
     </>
   );
 }
 
 export default App;
 
-const JsonInput = () => {
-  const [input, setInput] = useState("");
-  const [parsedResult, setParsedResult] = useState(null);
-  const [showSelection, setShowSelection] = useState(false);
-  const [apiResponse, setApiResponse] = useState(null);
-
-  const onInputChange = (event) => {
-    setInput(event.target.value);
+const JsonInputComponent = () => {
+  const [jsonInput, setJsonInput] = useState("");
+  const [parsedData, setParsedData] = useState(null);
+  const [showOptions, setShowOptions] = useState(false);
+  const [apiData, setApiData] = useState(null);
+  const handleInputChange = (e) => {
+    setJsonInput(e.target.value);
   };
-
-  const onFormSubmit = (event) => {
-    event.preventDefault();
-    setShowSelection(false);
+  const handleSubmit = (e) => {
+    setShowOptions(false);
+    e.preventDefault();
     try {
-      const result = JSON.parse(input);
-      setParsedResult(result);
-      sendToAPI(result);
-    } catch (err) {
-      toast.error("Invalid JSON format. Please try again.");
+      const parsed = JSON.parse(jsonInput);
+      setParsedData(parsed);
+      handleAPI(parsed);
+    } catch (error) {
+      toast.error("Invalid JSON. Please check your input and try again.");
     }
   };
 
-  const sendToAPI = async (payload) => {
-    console.log(payload);
+  const handleAPI = async (data) => {
+    console.log(data);
     axios
-      .post(`${API}/bfhl`, payload)
-      .then((response) => {
-        console.log(response);
-        toast.success("Data successfully sent to the API.");
-        setApiResponse(response.data);
-        setShowSelection(true);
+      .post(`https://bajajbackend-five.vercel.app/bfhl`, data)
+      .then((res) => {
+        console.log(res);
+        toast.success("Data sent to the API successfully.");
+        setApiData(res.data);
+        setShowOptions(true);
       })
-      .catch((err) => {
-        console.error(err);
-        toast.error("An error occurred while communicating with the API.");
+      .catch((error) => {
+        console.error(error);
+        toast.error("An error occurred while sending data to the API.");
       });
   };
 
@@ -57,86 +55,99 @@ const JsonInput = () => {
       <Toaster />
       <div className="p-6 max-w-md mx-auto bg-white rounded-xl">
         <h3 className="text-xl font-bold text-gray-900">API Input</h3>
-        <form onSubmit={onFormSubmit}>
+        <form onSubmit={handleSubmit}>
           <textarea
-            value={input}
-            onChange={onInputChange}
+            value={jsonInput}
+            onChange={handleInputChange}
             rows="6"
-            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder='{"data": ["A", "B", "c"]}'
+            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            placeholder='{"data": ["A", "C", "z"]}'
           />
           <button
             type="submit"
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             Submit
           </button>
         </form>
       </div>
-      {showSelection && (
+      {showOptions && (
         <div>
-          <OptionsComponent apiData={apiResponse} />
+          <MultiSelectComponent data={apiData} />
         </div>
       )}
     </div>
   );
 };
 
-const OptionsComponent = ({ apiData }) => {
-  const choices = ["Alphabets", "Numbers", "Highest Lowercase Alphabet"];
-  const [selectedItems, setSelectedItems] = useState([]);
+const MultiSelectComponent = ({ data }) => {
+  // All options for the multi-select component
+  const options = ["Alphabets", "Numbers", "Highest Lowest Alphabet"];
 
-  const handleSelectionChange = (selected) => {
-    setSelectedItems(selected);
+  // State to manage selected options
+  const [selectedOptions, setSelectedOptions] = useState([]);
+
+  // Handle change in selected options
+  const handleSelectionChange = (e) => {
+    setSelectedOptions(e);
   };
 
   return (
-    <div className="p-6 max-w-md mx-auto bg-white rounded-xl">
-      <h3 className="text-xl font-bold text-gray-900">Choose Options</h3>
+    <div className="p-6 max-w-md mx-auto bg-white rounded-xl ">
+      <h3 className="text-xl font-bold text-gray-900">Select Options</h3>
       <div>
         <Select
           mode="multiple"
           style={{ width: "100%" }}
-          placeholder="Select options"
+          placeholder="Please select"
           onChange={handleSelectionChange}
         >
-          {choices.map((choice) => (
-            <Select.Option key={choice} value={choice}>
-              {choice}
+          {options.map((option) => (
+            <Select.Option key={option} value={option}>
+              {option}
             </Select.Option>
           ))}
         </Select>
       </div>
 
       <div className="mt-4">
-        <h3>Filtered Results:</h3>
-        {selectedItems.includes("Numbers") && (
-          <div className="flex gap-4">
-            <h4>Numbers: </h4>
-            {apiData?.numbers?.map((num, index) => (
-              <p key={index}>{num}</p>
-            ))}
-          </div>
-        )}
+        <h3>Filtered Response:</h3>
+        {
+          // Display the filtered data based on the selected options
+          selectedOptions.includes("Numbers") && (
+            <div className="flex gap-4">
+              <h4>Numbers: </h4>
+              {data?.numbers?.map((number) => (
+                <p>{number} </p>
+              ))}
+            </div>
+          )
+        }
 
-        {selectedItems.includes("Alphabets") && (
-          <div className="flex gap-4">
-            <h4>Alphabets: </h4>
-            {apiData?.alphabets?.map((alpha, index) => (
-              <p key={index}>{alpha}</p>
-            ))}
-          </div>
-        )}
+        {
+          // Display the filtered data based on the selected options
+          selectedOptions.includes("Alphabets") && (
+            <div className="flex gap-4">
+              <h4>Alphabets : </h4>
+              {data?.alphabets?.map((alphabet) => (
+                <p>{alphabet} </p>
+              ))}
+            </div>
+          )
+        }
 
-        {selectedItems.includes("Highest Lowercase Alphabet") && (
-          <div className="flex gap-4">
-            <h4>Highest Lowercase Alphabet: </h4>
-            {apiData?.highest_lowercase_alphabet?.map((char, index) => (
-              <p key={index}>{char}</p>
-            ))}
-          </div>
-        )}
+        {
+          // Display the filtered data based on the selected options
+          selectedOptions.includes("Highest Lowest Alphabet") && (
+            <div className="flex gap-4">
+              <h4>Highest Lowest Alphabet: </h4>
+              {data?.highest_lowercase_alphabet?.map((number) => (
+                <p>{number} </p>
+              ))}
+            </div>
+          )
+        }
       </div>
-    </div>
-  );
+    </div>
+  );
 };
